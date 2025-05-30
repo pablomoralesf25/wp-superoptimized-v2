@@ -1,0 +1,66 @@
+[DEFAULT]
+# Reduced ban times for better performance
+bantime = 1800     # 30 minutes instead of 10 hours
+findtime = 300     # 5 minutes instead of 10
+maxretry = 5       # More lenient - 5 attempts instead of 3
+banaction = docker-action
+action = %(banaction)s[port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+chain = DOCKER-USER
+protocol = tcp
+port = http,https
+backend = auto
+usedns = no
+logencoding = auto
+ignoreip = 127.0.0.1/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16
+
+# Disable aggressive incremental banning that causes "rate limiting explosion"
+bantime.increment = false
+# bantime.rndtime = 86400
+# bantime.multipliers = 1 5 30 60 300 720 1440 2880
+# findtime.multipliers = 1 2 4 8 16 32 64 128
+# maxretry.multipliers = 1 1 2 2 2 2 2 2
+
+[wordpress-auth]
+enabled = true
+filter = wordpress-auth
+logpath = /var/lib/docker/containers/*/*-json.log
+port = http,https
+maxretry = 5       # More lenient
+findtime = 600     # 10 minutes
+bantime = 1800     # 30 minutes
+
+[wordpress-soft]
+enabled = true
+filter = wordpress-soft
+logpath = /var/lib/docker/containers/*/*-json.log
+port = http,https
+maxretry = 10      # Much more lenient for soft failures
+findtime = 600
+bantime = 900      # 15 minutes
+
+[wordpress-extra]
+enabled = false    # DISABLED - Too aggressive for config file access
+# filter = wordpress-extra
+# logpath = /var/lib/docker/containers/*/*-json.log
+# port = http,https
+# maxretry = 1
+# findtime = 300
+# bantime = 7200
+
+[wordpress-hard]
+enabled = true
+filter = wordpress-hard
+logpath = /var/lib/docker/containers/*/*-json.log
+port = http,https
+maxretry = 3       # Keep restrictive for real attacks
+findtime = 300
+bantime = 3600     # 1 hour instead of 24 hours
+
+[wordpress-aggressive]
+enabled = false    # DISABLED - Causes too many false positives
+# filter = wordpress-aggressive
+# logpath = /var/lib/docker/containers/*/*-json.log
+# port = http,https
+# maxretry = 2
+# findtime = 300
+# bantime = 172800 
