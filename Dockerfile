@@ -68,12 +68,12 @@ CMD ["/usr/local/lsws/bin/lswsctrl", "start", "-n"]
 
 # Aggiorna i pacchetti e installa le versioni sicure per Ubuntu 22.04
 RUN apt-get update && apt-get install -y \
-    python3.12=3.12.3-1ubuntu0.3 \
-    libglib2.0-0=2.80.0-6ubuntu3.2 \
-    curl=8.5.0-2ubuntu10.5 \
-    mysql-server=8.0.40-0ubuntu0.22.04.1 \
-    mysql-client=8.0.40-0ubuntu0.22.04.1 \
-    ghostscript=10.02.1~dfsg1-0ubuntu7.4 \
+    python3.12 \
+    libglib2.0-0 \
+    curl \
+    mysql-server \
+    mysql-client \
+    ghostscript \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
