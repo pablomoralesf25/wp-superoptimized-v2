@@ -55,9 +55,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure DNS for better resolution in Docker containers
-RUN echo "nameserver 8.8.8.8" >> /etc/resolv.conf && \
-    echo "nameserver 8.8.4.4" >> /etc/resolv.conf && \
-    echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+# Note: /etc/resolv.conf is managed by Docker, so we'll configure DNS at runtime
+RUN echo "# DNS will be configured at runtime in entrypoint script" > /tmp/dns-config.txt
 
 # Create optimized directories for caching
 RUN mkdir -p /tmp/opcache \
@@ -463,6 +462,17 @@ RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '# COOLIFY-SPECIFIC NETWORKING FIXES' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Applying Coolify networking fixes..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Configure DNS for better resolution (runtime configuration)' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "Configuring DNS for container networking..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'if [ -w /etc/resolv.conf ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "nameserver 8.8.8.8" >> /etc/resolv.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "nameserver 8.8.4.4" >> /etc/resolv.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "nameserver 1.1.1.1" >> /etc/resolv.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "DNS configuration updated"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'else' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "DNS managed by Docker, using default configuration"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '# Test DNS resolution' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'echo "Testing DNS resolution..."' >> /usr/local/bin/docker-entrypoint.sh && \
