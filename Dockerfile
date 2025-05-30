@@ -54,11 +54,31 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
+# Create scripts directory
+RUN mkdir -p /var/www/scripts/
+
 # Copia gli script
 COPY scripts/ /var/www/scripts/
 
+# Debug: List what was copied
+RUN ls -la /var/www/scripts/
+
 # Rendiamo gli script eseguibili
 RUN chmod +x /var/www/scripts/*.sh
+
+# Debug: Verify entrypoint exists and is executable
+RUN ls -la /var/www/scripts/docker-entrypoint.sh
+
+# Debug: Check file contents to make sure it's not corrupted
+RUN head -5 /var/www/scripts/docker-entrypoint.sh
+
+# Set working directory
+WORKDIR /var/www
+
+# Ensure entrypoint is executable and verify its existence
+RUN chmod +x /var/www/scripts/docker-entrypoint.sh && \
+    test -f /var/www/scripts/docker-entrypoint.sh && \
+    test -x /var/www/scripts/docker-entrypoint.sh
 
 # Impostiamo l'ENTRYPOINT
 ENTRYPOINT ["/var/www/scripts/docker-entrypoint.sh"]
