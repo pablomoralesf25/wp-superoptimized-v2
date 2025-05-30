@@ -130,14 +130,12 @@ services:
       - F2B_IPTABLES_BLOCKTYPE=DROP
       - F2B_IPTABLES_LOCKINGOPT=-w
     volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./config/fail2ban:/etc/fail2ban:ro
-      - fail2ban_data:/var/lib/fail2ban
-      - fail2ban_run:/var/run/fail2ban
-      - fail2ban_tmp:/tmp
-    tmpfs:
-      - /tmp
-      - /var/tmp
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro # For log access
+      - ./config/fail2ban/jail.local:/data/fail2ban/jail.d/00-wordpress.local:ro # Mount specific jail config
+      - ./config/fail2ban/fail2ban.local:/data/fail2ban/fail2ban.local:ro # Mount fail2ban.local
+      - ./config/fail2ban/filter.d:/data/fail2ban/filter.d:ro # Mount your custom filters
+      - ./config/fail2ban/action.d:/data/fail2ban/action.d:ro # Mount your custom actions
+      - fail2ban_data:/data # Persistent storage for fail2ban's database, etc.
     network_mode: "host"
     restart: always
     cap_add:
@@ -160,5 +158,3 @@ volumes:
   php_extensions:
   wordpress_logs:
   fail2ban_data:
-  fail2ban_run:
-  fail2ban_tmp:
