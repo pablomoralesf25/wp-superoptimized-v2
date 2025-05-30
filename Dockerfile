@@ -15,6 +15,8 @@ ARG WORDPRESS_VERSION=6.6.2
 ENV PHP_EXT_DIR=/usr/local/lsws/lsphp${PHP_VERSION}/lib/php/20220829
 ENV PHP_INI_DIR=/usr/local/lsws/lsphp${PHP_VERSION}/etc/php/8.2/mods-available/
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Installa dipendenze essenziali
 RUN apt-get update && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get autoremove -y && apt-get clean && \
     apt-get install -y \
@@ -169,7 +171,7 @@ RUN echo '' >> /usr/local/bin/security-setup.sh && \
     echo 'wp plugin delete hello --allow-root' >> /usr/local/bin/security-setup.sh
 
 RUN echo '' >> /usr/local/bin/security-setup.sh && \
-    echo '# Verifica se le variabili d\'ambiente sono impostate' >> /usr/local/bin/security-setup.sh && \
+    echo '# Verifica se le variabili d'\''ambiente sono impostate' >> /usr/local/bin/security-setup.sh && \
     echo 'if [ "${ENABLE_MODSECURITY}" = "true" ]; then' >> /usr/local/bin/security-setup.sh && \
     echo '    echo "Enabling ModSecurity..."' >> /usr/local/bin/security-setup.sh && \
     echo '    # Configurazione ModSecurity' >> /usr/local/bin/security-setup.sh && \
