@@ -271,7 +271,7 @@ RUN echo '' >> /usr/local/bin/security-setup.sh && \
     echo '        # Aggiungi altri URL qui' >> /usr/local/bin/security-setup.sh && \
     echo '    )' >> /usr/local/bin/security-setup.sh && \
     echo '' >> /usr/local/bin/security-setup.sh && \
-    echo '    # Installa ogni plugin dall\'URL' >> /usr/local/bin/security-setup.sh && \
+    echo '    # Installa ogni plugin dall'\''URL' >> /usr/local/bin/security-setup.sh && \
     echo '    for url in "${plugin_urls[@]}"; do' >> /usr/local/bin/security-setup.sh && \
     echo '        echo "Installing plugin from: $url"' >> /usr/local/bin/security-setup.sh && \
     echo '        if wp plugin install "$url" --force --allow-root; then' >> /usr/local/bin/security-setup.sh && \
@@ -293,7 +293,7 @@ RUN echo '' >> /usr/local/bin/security-setup.sh && \
     echo '        # Aggiungi altri URL qui' >> /usr/local/bin/security-setup.sh && \
     echo '    )' >> /usr/local/bin/security-setup.sh && \
     echo '' >> /usr/local/bin/security-setup.sh && \
-    echo '    # Installa ogni tema dall\'URL' >> /usr/local/bin/security-setup.sh && \
+    echo '    # Installa ogni tema dall'\''URL' >> /usr/local/bin/security-setup.sh && \
     echo '    for url in "${theme_urls[@]}"; do' >> /usr/local/bin/security-setup.sh && \
     echo '        echo "Installing theme from: $url"' >> /usr/local/bin/security-setup.sh && \
     echo '        if wp theme install "$url" --force --allow-root; then' >> /usr/local/bin/security-setup.sh && \
