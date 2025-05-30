@@ -30,6 +30,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get a
     ghostscript \
     ca-certificates \
     gnupg \
+    file \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
