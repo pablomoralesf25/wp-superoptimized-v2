@@ -10,7 +10,7 @@ redis ultima versione(volendo redis possiamo agganciarla a wordpress senza inclu
 
 cè l'immagine di openlightspeed litespeedtech/openlitespeed:1.8.2-lsphp82 del solo server
 Component Version
-Linux Ubuntu 24.04
+Linux Ubuntu 22.04
 OpenLiteSpeed Latest stable version
 PHP Latest stable version
 
@@ -19,7 +19,7 @@ che andrebbe combinata poi con mariadb e wordpress
 relay per installarlo via docker dalla doc ufficiale dice
 
 Using Docker
-We have various Docker examples on GitHub. If you’re using the official PHP Docker images you can install Relay using the php-extension-installer:
+We have various Docker examples on GitHub. If you're using the official PHP Docker images you can install Relay using the php-extension-installer:
 
 FROM php:8.1-cli(ovviamente cambiando la versione di php)
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/

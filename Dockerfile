@@ -66,13 +66,13 @@ RUN chmod +x /var/www/scripts/*.sh
 ENTRYPOINT ["/var/www/scripts/docker-entrypoint.sh"]
 CMD ["/usr/local/lsws/bin/lswsctrl", "start", "-n"]
 
-# Aggiorna i pacchetti e installa le versioni sicure per Ubuntu 24.04
+# Aggiorna i pacchetti e installa le versioni sicure per Ubuntu 22.04
 RUN apt-get update && apt-get install -y \
     python3.12=3.12.3-1ubuntu0.3 \
     libglib2.0-0=2.80.0-6ubuntu3.2 \
     curl=8.5.0-2ubuntu10.5 \
-    mysql-server=8.0.40-0ubuntu0.24.04.1 \
-    mysql-client=8.0.40-0ubuntu0.24.04.1 \
+    mysql-server=8.0.40-0ubuntu0.22.04.1 \
+    mysql-client=8.0.40-0ubuntu0.22.04.1 \
     ghostscript=10.02.1~dfsg1-0ubuntu7.4 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
