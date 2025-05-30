@@ -22,14 +22,6 @@ check_litespeed() {
     return 0
 }
 
-# Copy custom php.ini if provided
-if [ -f "/tmp/host-php.ini" ]; then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') Copying custom php.ini configuration..."
-    mkdir -p "/usr/local/lsws/lsphp${PHP_VERSION}/etc/php/8.2/litespeed/"
-    cp "/tmp/host-php.ini" "/usr/local/lsws/lsphp${PHP_VERSION}/etc/php/8.2/litespeed/php.ini"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') Custom php.ini copied successfully"
-fi
-
 # Attendiamo che MySQL sia pronto
 until mysqladmin ping -h"$WORDPRESS_DB_HOST" --silent; do
     echo "$(date '+%Y-%m-%d %H:%M:%S') Starting up: Waiting for MySQL to be ready..."
