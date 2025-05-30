@@ -399,6 +399,10 @@ RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '        --admin_user="$ADMIN_USER" \\' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '        --admin_password="$ADMIN_PASSWORD" \\' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '        --admin_email="$ADMIN_EMAIL" \\' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '        --dbhost="$WORDPRESS_DB_HOST" \\' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '        --dbname="$WORDPRESS_DB_NAME" \\' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '        --dbuser="$WORDPRESS_DB_USER" \\' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '        --dbpass="$WORDPRESS_DB_PASSWORD" \\' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '        --allow-root' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'fi' >> /usr/local/bin/docker-entrypoint.sh
 
