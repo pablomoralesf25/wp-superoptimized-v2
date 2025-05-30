@@ -5,16 +5,15 @@ ARG PHP_VERSION=82
 FROM litespeedtech/openlitespeed:${OPENLITESPEED_VERSION}-lsphp${PHP_VERSION}
 
 # Altri argomenti build
-
 ARG RELAY_VERSION=v0.8.0
 ARG RELAY_PHP_VERSION=8.2
 ARG PLATFORM=x86-64
 ARG PHP_VERSION=82
+ARG WORDPRESS_VERSION=6.6.2   
 
 # Imposta le directory PHP
 ENV PHP_EXT_DIR=/usr/local/lsws/lsphp${PHP_VERSION}/lib/php/20220829
 ENV PHP_INI_DIR=/usr/local/lsws/lsphp${PHP_VERSION}/etc/php/8.2/mods-available/
-
 
 # Installa dipendenze essenziali
 RUN apt-get update && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get autoremove -y && apt-get clean && \
@@ -23,7 +22,20 @@ RUN apt-get update && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get a
     wait-for-it \
     gettext-base \
     tzdata \
+    python3.12 \
+    libglib2.0-0 \
+    curl \
+    mysql-server \
+    mysql-client \
+    ghostscript \
+    ca-certificates \
+    gnupg \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Imposta permessi restrittivi
+RUN chmod 644 /etc/apt/sources.list.d/* \
+    && chmod 644 /etc/apt/sources.list
 
 # Download Relay
 RUN curl -L "https://builds.r2.relay.so/${RELAY_VERSION}/relay-${RELAY_VERSION}-php${RELAY_PHP_VERSION}-debian-${PLATFORM}+libssl3.tar.gz" | tar xz -C /tmp
@@ -39,7 +51,6 @@ RUN cp "/tmp/relay-${RELAY_VERSION}-php${RELAY_PHP_VERSION}-debian-${PLATFORM}+l
     && sed -i 's/^relay.maxmemory_pct = .*/relay.maxmemory_pct = 95/' "${PHP_INI_DIR}/60-relay.ini" \
     && rm -rf /tmp/relay*
 
-ARG WORDPRESS_VERSION=6.6.2   
 # Scarica e configura WordPress
 RUN cd /var/www/vhosts/localhost/ \
     && wget https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz \
@@ -54,54 +65,41 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
-# Create scripts directory
+# Create scripts directory FIRST
 RUN mkdir -p /var/www/scripts/
 
-# Copia gli script
+# Copy scripts with explicit verification
 COPY scripts/ /var/www/scripts/
 
-# Debug: List what was copied
-RUN ls -la /var/www/scripts/
+# Debug: Verify what was copied
+RUN echo "=== DEBUG: Listing /var/www/scripts/ contents ===" \
+    && ls -la /var/www/scripts/ \
+    && echo "=== DEBUG: Checking specific files ===" \
+    && [ -f /var/www/scripts/docker-entrypoint.sh ] && echo "✓ docker-entrypoint.sh exists" || echo "✗ docker-entrypoint.sh missing" \
+    && [ -f /var/www/scripts/security-setup.sh ] && echo "✓ security-setup.sh exists" || echo "✗ security-setup.sh missing" \
+    && [ -f /var/www/scripts/owaspctl.sh ] && echo "✓ owaspctl.sh exists" || echo "✗ owaspctl.sh missing"
 
-# Rendiamo gli script eseguibili
+# Make all scripts executable
 RUN chmod +x /var/www/scripts/*.sh
 
-# Debug: Verify entrypoint exists and is executable
-RUN ls -la /var/www/scripts/docker-entrypoint.sh
-
-# Debug: Check file contents to make sure it's not corrupted
-RUN head -5 /var/www/scripts/docker-entrypoint.sh
+# Verify scripts are executable and readable
+RUN echo "=== DEBUG: Verifying script permissions ===" \
+    && ls -la /var/www/scripts/ \
+    && echo "=== DEBUG: Testing entrypoint script ===" \
+    && [ -x /var/www/scripts/docker-entrypoint.sh ] && echo "✓ docker-entrypoint.sh is executable" || echo "✗ docker-entrypoint.sh not executable" \
+    && echo "=== DEBUG: Script content check ===" \
+    && head -5 /var/www/scripts/docker-entrypoint.sh
 
 # Set working directory
 WORKDIR /var/www
 
-# Ensure entrypoint is executable and verify its existence
-RUN chmod +x /var/www/scripts/docker-entrypoint.sh && \
-    test -f /var/www/scripts/docker-entrypoint.sh && \
-    test -x /var/www/scripts/docker-entrypoint.sh
+# Final verification before setting entrypoint
+RUN echo "=== FINAL DEBUG: Entrypoint verification ===" \
+    && test -f /var/www/scripts/docker-entrypoint.sh && echo "✓ Entrypoint file exists" || (echo "✗ Entrypoint file missing!" && exit 1) \
+    && test -x /var/www/scripts/docker-entrypoint.sh && echo "✓ Entrypoint is executable" || (echo "✗ Entrypoint not executable!" && exit 1) \
+    && file /var/www/scripts/docker-entrypoint.sh \
+    && echo "=== Entrypoint setup complete ==="
 
-# Impostiamo l'ENTRYPOINT
+# Set entrypoint
 ENTRYPOINT ["/var/www/scripts/docker-entrypoint.sh"]
 CMD ["/usr/local/lsws/bin/lswsctrl", "start", "-n"]
-
-# Aggiorna i pacchetti e installa le versioni sicure per Ubuntu 22.04
-RUN apt-get update && apt-get install -y \
-    python3.12 \
-    libglib2.0-0 \
-    curl \
-    mysql-server \
-    mysql-client \
-    ghostscript \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Installa gli aggiornamenti di sicurezza
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    gnupg \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Imposta permessi restrittivi
-RUN chmod 644 /etc/apt/sources.list.d/* \
-    && chmod 644 /etc/apt/sources.list
