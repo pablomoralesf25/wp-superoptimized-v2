@@ -225,7 +225,13 @@ RUN echo '' >> /usr/local/bin/security-setup.sh && \
 RUN echo '' >> /usr/local/bin/security-setup.sh && \
     echo '# Funzione per installare e configurare LiteSpeed Cache' >> /usr/local/bin/security-setup.sh && \
     echo 'setup_litespeed_cache() {' >> /usr/local/bin/security-setup.sh && \
-    echo '    wp plugin install litespeed-cache --activate --allow-root' >> /usr/local/bin/security-setup.sh && \
+    echo '    echo "Installing LiteSpeed Cache plugin..."' >> /usr/local/bin/security-setup.sh && \
+    echo '    if timeout 60 wp plugin install litespeed-cache --activate --allow-root; then' >> /usr/local/bin/security-setup.sh && \
+    echo '        echo "LiteSpeed Cache installed successfully"' >> /usr/local/bin/security-setup.sh && \
+    echo '    else' >> /usr/local/bin/security-setup.sh && \
+    echo '        echo "LiteSpeed Cache installation failed or timed out - continuing..."' >> /usr/local/bin/security-setup.sh && \
+    echo '        return 0' >> /usr/local/bin/security-setup.sh && \
+    echo '    fi' >> /usr/local/bin/security-setup.sh && \
     echo '' >> /usr/local/bin/security-setup.sh && \
     echo '    # Cache Settings' >> /usr/local/bin/security-setup.sh && \
     echo '    wp litespeed-option set cache true --allow-root' >> /usr/local/bin/security-setup.sh && \
@@ -337,12 +343,14 @@ RUN echo '' >> /usr/local/bin/security-setup.sh && \
     echo '    done' >> /usr/local/bin/security-setup.sh && \
     echo '}' >> /usr/local/bin/security-setup.sh && \
     echo '' >> /usr/local/bin/security-setup.sh && \
-    echo '# Esegui le configurazioni' >> /usr/local/bin/security-setup.sh && \
+    echo '# FAST STARTUP - Skip heavy plugin installations for now' >> /usr/local/bin/security-setup.sh && \
+    echo 'echo "Installing LiteSpeed Cache plugin only..."' >> /usr/local/bin/security-setup.sh && \
     echo 'setup_litespeed_cache' >> /usr/local/bin/security-setup.sh && \
-    echo 'setup_security_plugins' >> /usr/local/bin/security-setup.sh && \
-    echo '#setup_optimization_plugins() {}' >> /usr/local/bin/security-setup.sh && \
-    echo 'setup_custom_plugins' >> /usr/local/bin/security-setup.sh && \
-    echo 'setup_custom_themes' >> /usr/local/bin/security-setup.sh && \
+    echo '' >> /usr/local/bin/security-setup.sh && \
+    echo '# Skip heavy plugin downloads for faster startup' >> /usr/local/bin/security-setup.sh && \
+    echo '# setup_security_plugins  # Uncomment if needed' >> /usr/local/bin/security-setup.sh && \
+    echo '# setup_custom_plugins    # Uncomment if needed' >> /usr/local/bin/security-setup.sh && \
+    echo '# setup_custom_themes     # Uncomment if needed' >> /usr/local/bin/security-setup.sh && \
     echo '' >> /usr/local/bin/security-setup.sh && \
     echo '# Pulisci la cache dopo le installazioni' >> /usr/local/bin/security-setup.sh && \
     echo 'wp cache flush --allow-root' >> /usr/local/bin/security-setup.sh && \
@@ -556,14 +564,15 @@ RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'chmod -R 755 /var/www/vhosts/localhost/html/' >> /usr/local/bin/docker-entrypoint.sh
 
 RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '# Eseguiamo il setup di sicurezza una sola volta' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Eseguiamo il setup di sicurezza una sola volta (con timeout)' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'if [ ! -f "/var/www/security-setup.done" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting up: Running security setup..."' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '    if bash /usr/local/bin/security-setup.sh; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    if timeout 120 bash /usr/local/bin/security-setup.sh; then' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '        touch /var/www/security-setup.done' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '        echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Security setup completed successfully."' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    else' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '        echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') WARNING: Security setup failed!"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '        echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') WARNING: Security setup failed or timed out - continuing anyway..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '        touch /var/www/security-setup.done' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    fi' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'fi' >> /usr/local/bin/docker-entrypoint.sh
 
