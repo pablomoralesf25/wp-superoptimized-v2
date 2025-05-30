@@ -24,9 +24,6 @@ RUN apt-get update && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get a
     tzdata \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia il template del php.ini
-COPY config/php.ini.template /usr/local/lsws/lsphp${PHP_VERSION}/etc/php/8.2/litespeed/php.ini
-
 # Download Relay
 RUN curl -L "https://builds.r2.relay.so/${RELAY_VERSION}/relay-${RELAY_VERSION}-php${RELAY_PHP_VERSION}-debian-${PLATFORM}+libssl3.tar.gz" | tar xz -C /tmp
 
