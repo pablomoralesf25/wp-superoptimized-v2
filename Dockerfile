@@ -194,14 +194,22 @@ RUN echo '' >> /var/www/scripts/docker-entrypoint.sh && \
     echo '    sleep 10' >> /var/www/scripts/docker-entrypoint.sh && \
     echo 'done' >> /var/www/scripts/docker-entrypoint.sh
 
+# Ensure dos2unix is installed and convert the script
+RUN apt-get update && apt-get install -y dos2unix && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN dos2unix /var/www/scripts/docker-entrypoint.sh
+
 # Make entrypoint executable and verify
 RUN chmod +x /var/www/scripts/docker-entrypoint.sh && \
+    echo "=== SHELL VERIFICATION ===" && \
+    ls -l /bin/bash && \
     echo "=== ENTRYPOINT VERIFICATION ===" && \
     ls -la /var/www/scripts/docker-entrypoint.sh && \
-    echo "=== ENTRYPOINT CONTENT CHECK ===" && \
+    echo "=== ENTRYPOINT CONTENT CHECK (FIRST 10 LINES) ===" && \
     head -10 /var/www/scripts/docker-entrypoint.sh && \
-    echo "=== ENTRYPOINT SIZE CHECK ===" && \
+    echo "=== ENTRYPOINT SIZE CHECK (LINES) ===" && \
     wc -l /var/www/scripts/docker-entrypoint.sh && \
+    echo "=== ENTRYPOINT SYNTAX CHECK ===" && \
+    bash -n /var/www/scripts/docker-entrypoint.sh && \
     echo "=== ENTRYPOINT READY ==="
 
 # Set working directory
