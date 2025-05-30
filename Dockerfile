@@ -440,23 +440,37 @@ RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'fi' >> /usr/local/bin/docker-entrypoint.sh
 
 RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '# Optimize system settings for maximum performance' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Optimizing system settings..."' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'echo "net.core.rmem_max = 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'echo "net.core.wmem_max = 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'echo "net.ipv4.tcp_rmem = 4096 87380 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'echo "net.ipv4.tcp_wmem = 4096 65536 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'echo "net.core.netdev_max_backlog = 5000" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'sysctl -p /etc/sysctl.conf 2>/dev/null || true' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Optimize system settings for maximum performance (one-time only)' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'if [ ! -f "/tmp/.sysctl-configured" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Optimizing system settings..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "net.core.rmem_max = 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "net.core.wmem_max = 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "net.ipv4.tcp_rmem = 4096 87380 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "net.ipv4.tcp_wmem = 4096 65536 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "net.core.netdev_max_backlog = 5000" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    sysctl -p /etc/sysctl.conf 2>/dev/null || true' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    touch /tmp/.sysctl-configured' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "System settings optimized"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'else' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "System settings already optimized"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '# Start Redis for object caching' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting Redis server..."' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'redis-server --daemonize yes --maxmemory 256mb --maxmemory-policy allkeys-lru' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Start Redis for object caching (if not already running)' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'if ! pgrep redis-server > /dev/null; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting Redis server..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    redis-server --daemonize yes --maxmemory 256mb --maxmemory-policy allkeys-lru' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'else' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "Redis server already running"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '# Start Memcached for additional caching' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting Memcached server..."' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'memcached -d -m 128 -p 11211 -u nobody' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Start Memcached for additional caching (if not already running)' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'if ! pgrep memcached > /dev/null; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting Memcached server..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    memcached -d -m 128 -p 11211 -u nobody' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'else' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "Memcached server already running"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Performance optimizations applied successfully"' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '' >> /usr/local/bin/docker-entrypoint.sh && \
@@ -484,8 +498,12 @@ RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '# Copy Coolify wp_remote_get() fixes to WordPress' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'if [ -f "/tmp/coolify-wp-remote-get-fix.php" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    mkdir -p /var/www/vhosts/localhost/html/wp-content/mu-plugins/' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    cp /tmp/coolify-wp-remote-get-fix.php /var/www/vhosts/localhost/html/wp-content/mu-plugins/' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '    echo "Coolify wp_remote_get() fixes applied"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    chown -R nobody:nogroup /var/www/vhosts/localhost/html/wp-content/mu-plugins/' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "Coolify wp_remote_get() fixes applied to mu-plugins"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'else' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "Coolify wp_remote_get() fix file not found"' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Coolify networking fixes applied successfully"' >> /usr/local/bin/docker-entrypoint.sh && \
