@@ -1,29 +1,113 @@
-; Ottimizzazioni generali
+; ========================================
+; MAXIMUM PERFORMANCE PHP CONFIGURATION
+; ========================================
+
+; General optimizations for maximum speed
 memory_limit = ${PHP_MEMORY_LIMIT}
 max_execution_time = ${PHP_MAX_EXECUTION_TIME}
 max_input_vars = ${PHP_MAX_INPUT_VARS}
 upload_max_filesize = ${PHP_UPLOAD_MAX_FILESIZE}
 post_max_size = ${PHP_POST_MAX_SIZE}
 
-; Ottimizzazioni OPcache
+; Advanced performance settings
+max_input_time = 300
+default_socket_timeout = 300
+auto_detect_line_endings = Off
+ignore_repeated_errors = On
+ignore_repeated_source = On
+html_errors = Off
+track_errors = Off
+xmlrpc_errors = Off
+
+; File upload optimizations
+file_uploads = On
+max_file_uploads = 20
+
+; Output buffering for better performance
+output_buffering = 4096
+implicit_flush = Off
+
+; ========================================
+; OPCACHE MAXIMUM PERFORMANCE SETTINGS
+; ========================================
 opcache.enable = 1
+opcache.enable_cli = 1
 opcache.memory_consumption = ${PHP_OPCACHE_MEMORY_CONSUMPTION}
 opcache.interned_strings_buffer = ${PHP_OPCACHE_INTERNED_STRINGS_BUFFER}
 opcache.max_accelerated_files = ${PHP_OPCACHE_MAX_ACCELERATED_FILES}
 opcache.revalidate_freq = ${PHP_OPCACHE_REVALIDATE_FREQ}
 opcache.fast_shutdown = 1
-opcache.enable_cli = 1
 
-; Ottimizzazioni per Relay
+; Advanced OPcache optimizations for maximum speed
+opcache.validate_timestamps = 0
+opcache.save_comments = 0
+opcache.enable_file_override = 1
+opcache.optimization_level = 0x7FFEBFFF
+opcache.inherited_hack = 1
+opcache.dups_fix = 1
+opcache.blacklist_filename = ""
+opcache.max_wasted_percentage = 5
+opcache.use_cwd = 1
+opcache.cache_id = ""
+opcache.file_cache = "/tmp/opcache"
+opcache.file_cache_only = 0
+opcache.file_cache_consistency_checks = 0
+opcache.file_cache_fallback = 1
+opcache.huge_code_pages = 1
+opcache.preload_user = "nobody"
+
+; ========================================
+; RELAY REDIS CACHE OPTIMIZATIONS
+; ========================================
 relay.maxmemory = ${RELAY_MAX_MEMORY}
 relay.eviction_policy = ${RELAY_EVICTION_POLICY}
 relay.environment = production
+relay.databases = 16
+relay.maxmemory_pct = 95
+relay.default_pconnect = 1
+relay.default_pconnect_poolsize = 64
 
-; Ottimizzazioni per WordPress
+; ========================================
+; SESSION OPTIMIZATIONS
+; ========================================
 session.save_handler = ${PHP_SESSION_SAVE_HANDLER}
 session.save_path = "${PHP_SESSION_SAVE_PATH}"
 session.use_strict_mode = 1
 session.gc_maxlifetime = ${PHP_SESSION_GC_MAXLIFETIME}
+session.gc_probability = 1
+session.gc_divisor = 1000
+session.cookie_lifetime = 0
+session.cookie_secure = 1
+session.cookie_httponly = 1
+session.cookie_samesite = "Lax"
+session.use_cookies = 1
+session.use_only_cookies = 1
+session.cache_limiter = "nocache"
+
+; ========================================
+; CURL AND SSL CONFIGURATION FOR wp_remote_get()
+; ========================================
+; Fix wp_remote_get() SSL certificate issues
+curl.cainfo = "/etc/ssl/certs/ca-certificates.crt"
+openssl.cafile = "/etc/ssl/certs/ca-certificates.crt"
+openssl.capath = "/etc/ssl/certs/"
+
+; cURL optimizations
+default_socket_timeout = 60
+user_agent = "WordPress"
+
+; ========================================
+; REALPATH CACHE OPTIMIZATION
+; ========================================
+realpath_cache_size = 4096K
+realpath_cache_ttl = 600
+
+; ========================================
+; ZEND ENGINE OPTIMIZATIONS
+; ========================================
+zend.enable_gc = 1
+zend.multibyte = 0
+zend.script_encoding = ""
 
 # Security Headers
 header('X-Frame-Options: ${SECURITY_FRAME_OPTIONS}');

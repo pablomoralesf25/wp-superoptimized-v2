@@ -17,7 +17,7 @@ ENV PHP_INI_DIR=/usr/local/lsws/lsphp${PHP_VERSION}/etc/php/8.2/mods-available/
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Installa dipendenze essenziali
+# Install essential dependencies with maximum performance optimizations
 RUN apt-get update && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get autoremove -y && apt-get clean && \
     apt-get install -y \
     wget \
@@ -33,8 +33,42 @@ RUN apt-get update && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get a
     ca-certificates \
     gnupg \
     file \
+    redis-server \
+    memcached \
+    htop \
+    iotop \
+    net-tools \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Update CA certificates for wp_remote_get() SSL fix
+RUN update-ca-certificates --fresh
+
+# COOLIFY-SPECIFIC NETWORKING FIXES
+# Install additional networking tools for Coolify environment
+RUN apt-get update && apt-get install -y \
+    dnsutils \
+    iputils-ping \
+    telnet \
+    netcat-openbsd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure DNS for better resolution in Docker containers
+RUN echo "nameserver 8.8.8.8" >> /etc/resolv.conf && \
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf && \
+    echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+
+# Create optimized directories for caching
+RUN mkdir -p /tmp/opcache \
+    && mkdir -p /tmp/lshttpd/cache \
+    && mkdir -p /dev/shm/lscache \
+    && chmod 755 /tmp/opcache \
+    && chmod 755 /tmp/lshttpd/cache \
+    && chmod 755 /dev/shm/lscache \
+    && chown nobody:nogroup /tmp/opcache \
+    && chown nobody:nogroup /tmp/lshttpd/cache \
+    && chown nobody:nogroup /dev/shm/lscache
 
 # Imposta permessi restrittivi
 RUN chmod 644 /etc/apt/sources.list.d/* \
@@ -324,6 +358,15 @@ RUN echo '' >> /usr/local/bin/security-setup.sh && \
 RUN dos2unix /usr/local/bin/security-setup.sh
 # RUN dos2unix /usr/local/bin/docker-entrypoint.sh # Will add this back later
 
+# Copy performance monitoring script and make executable
+COPY scripts/performance-monitor.sh /usr/local/bin/performance-monitor.sh
+RUN chmod +x /usr/local/bin/performance-monitor.sh
+
+# Copy optimization files
+COPY config/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf
+COPY config/wp-config-optimizations.php /tmp/wp-config-optimizations.php
+COPY config/coolify-wp-remote-get-fix.php /tmp/coolify-wp-remote-get-fix.php
+
 # Make entrypoints executable and verify (simplified verification now)
 RUN chmod +x /usr/local/bin/security-setup.sh && \
     # chmod +x /usr/local/bin/docker-entrypoint.sh && # Will add this back later
@@ -335,7 +378,10 @@ RUN chmod +x /usr/local/bin/security-setup.sh && \
     echo "=== SECURITY SCRIPT VERIFICATION (/usr/local/bin/security-setup.sh) ===" && \
     ls -la /usr/local/bin/security-setup.sh && \
     bash -n /usr/local/bin/security-setup.sh && \
-    echo "=== SCRIPTS READY (security-setup.sh only for now) ==="
+    echo "=== PERFORMANCE MONITOR VERIFICATION ===" && \
+    ls -la /usr/local/bin/performance-monitor.sh && \
+    bash -n /usr/local/bin/performance-monitor.sh && \
+    echo "=== SCRIPTS READY ==="
 
 # Set working directory
 WORKDIR /var/www
@@ -377,9 +423,63 @@ RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    mkdir -p "/usr/local/lsws/lsphp${PHP_VERSION}/etc/php/8.2/litespeed/"' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    cp "/tmp/host-php.ini" "/usr/local/lsws/lsphp${PHP_VERSION}/etc/php/8.2/litespeed/php.ini"' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Custom php.ini copied successfully"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# MAXIMUM PERFORMANCE OPTIMIZATIONS' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Applying maximum performance optimizations..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Update CA certificates for wp_remote_get() fix' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Updating CA certificates for wp_remote_get() SSL fix..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'update-ca-certificates --fresh' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Set up RAM disk for cache if not exists' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'if [ ! -d "/dev/shm/lscache" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    mkdir -p /dev/shm/lscache' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    chown nobody:nogroup /dev/shm/lscache' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    chmod 755 /dev/shm/lscache' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') RAM disk cache directory created"' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'fi' >> /usr/local/bin/docker-entrypoint.sh
 
 RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Optimize system settings for maximum performance' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Optimizing system settings..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "net.core.rmem_max = 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "net.core.wmem_max = 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "net.ipv4.tcp_rmem = 4096 87380 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "net.ipv4.tcp_wmem = 4096 65536 16777216" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "net.core.netdev_max_backlog = 5000" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'sysctl -p /etc/sysctl.conf 2>/dev/null || true' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Start Redis for object caching' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting Redis server..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'redis-server --daemonize yes --maxmemory 256mb --maxmemory-policy allkeys-lru' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Start Memcached for additional caching' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting Memcached server..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'memcached -d -m 128 -p 11211 -u nobody' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Performance optimizations applied successfully"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# COOLIFY-SPECIFIC NETWORKING FIXES' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Applying Coolify networking fixes..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Test DNS resolution' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "Testing DNS resolution..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'nslookup api.wordpress.org || echo "DNS resolution test failed"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Test external connectivity' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "Testing external connectivity..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'curl -I --connect-timeout 10 https://api.wordpress.org/core/version-check/1.7/ || echo "External connectivity test failed"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Copy Coolify wp_remote_get() fixes to WordPress' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'if [ -f "/tmp/coolify-wp-remote-get-fix.php" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    cp /tmp/coolify-wp-remote-get-fix.php /var/www/vhosts/localhost/html/wp-content/mu-plugins/' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "Coolify wp_remote_get() fixes applied"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Coolify networking fixes applied successfully"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '# Attendiamo che MySQL sia pronto' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'until mysqladmin ping -h"$WORDPRESS_DB_HOST" --silent; do' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting up: Waiting for MySQL to be ready..."' >> /usr/local/bin/docker-entrypoint.sh && \
