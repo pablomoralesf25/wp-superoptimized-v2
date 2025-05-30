@@ -69,130 +69,17 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
 # Create scripts directory and start building entrypoint script
 RUN mkdir -p /var/www/scripts/
 
-# Create the shebang and logging setup
+# Create a SUPER SIMPLE entrypoint script for debugging
 RUN echo '#!/bin/bash' > /var/www/scripts/docker-entrypoint.sh && \
-    echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Configurazione logging' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'LOGFILE="/var/log/wordpress/entrypoint.log"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'mkdir -p /var/log/wordpress' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'exec 1> >(tee -a "$LOGFILE") 2>&1' >> /var/www/scripts/docker-entrypoint.sh
-
-# Add logging socket setup
-RUN echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Creiamo il socket per il logging se non esiste' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'if [ ! -d "/dev" ]; then' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    mkdir -p /dev' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'fi' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'if [ ! -S "/dev/log" ]; then' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    mkfifo /dev/log' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'fi' >> /var/www/scripts/docker-entrypoint.sh
-
-# Add check_litespeed function
-RUN echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Funzione per verificare lo stato di OpenLiteSpeed' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'check_litespeed() {' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    if ! pgrep litespeed > /dev/null; then' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') ERROR: OpenLiteSpeed non è in esecuzione!"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        return 1' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    fi' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    return 0' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '}' >> /var/www/scripts/docker-entrypoint.sh
-
-# Add PHP ini setup
-RUN echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Copy custom php.ini if provided' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'if [ -f "/tmp/host-php.ini" ]; then' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Copying custom php.ini configuration..."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    mkdir -p "/usr/local/lsws/lsphp${PHP_VERSION}/etc/php/8.2/litespeed/"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    cp "/tmp/host-php.ini" "/usr/local/lsws/lsphp${PHP_VERSION}/etc/php/8.2/litespeed/php.ini"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Custom php.ini copied successfully"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'fi' >> /var/www/scripts/docker-entrypoint.sh
-
-# Add MySQL wait logic
-RUN echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Attendiamo che MySQL sia pronto' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'until mysqladmin ping -h"$WORDPRESS_DB_HOST" --silent; do' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting up: Waiting for MySQL to be ready..."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    sleep 2' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'done' >> /var/www/scripts/docker-entrypoint.sh
-
-# Add WordPress installation
-RUN echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Imposta il percorso corretto per WordPress' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'cd /var/www/vhosts/localhost/html' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Installiamo WordPress se non è già installato' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'if ! wp core is-installed --allow-root; then' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting up: Installing WordPress..."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    wp core install \' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        --url="$SITE_URL" \' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        --title="$SITE_TITLE" \' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        --admin_user="$ADMIN_USER" \' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        --admin_password="$ADMIN_PASSWORD" \' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        --admin_email="$ADMIN_EMAIL" \' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        --allow-root' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'fi' >> /var/www/scripts/docker-entrypoint.sh
-
-# Add OpenLiteSpeed admin setup
-RUN echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Configure OpenLiteSpeed admin credentials' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'if [ ! -f "/usr/local/lsws/admin/conf/htpasswd" ]; then' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting up: Configuring OpenLiteSpeed admin credentials..."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    # Create admin user' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    /usr/local/lsws/admin/misc/admpass.sh << SUBEOF' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '${OLS_ADMIN_USERNAME}' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '${OLS_ADMIN_PASSWORD}' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '${OLS_ADMIN_PASSWORD}' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'SUBEOF' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    echo "OpenLiteSpeed admin credentials configured."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'fi' >> /var/www/scripts/docker-entrypoint.sh
-
-# Add permissions and security setup
-RUN echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Verifica e correggi i permessi' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Checking and fixing permissions..."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'chown -R nobody:nogroup /usr/local/lsws/conf/' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'chmod -R 755 /usr/local/lsws/conf/' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'chown -R nobody:nogroup /var/www/vhosts/localhost/html/' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'chmod -R 755 /var/www/vhosts/localhost/html/' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Simplified security setup (embedded)' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting up: Running security setup..."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'if [ ! -f "/var/www/security-setup.done" ]; then' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    # Basic security hardening' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    chmod 644 /etc/passwd /etc/group' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    find /var/www/vhosts/localhost/html -type d -exec chmod 755 {} \;' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    find /var/www/vhosts/localhost/html -type f -exec chmod 644 {} \;' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    touch /var/www/security-setup.done' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Security setup completed successfully."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'fi' >> /var/www/scripts/docker-entrypoint.sh
-
-# Add OpenLiteSpeed startup and monitoring
-RUN echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Avviamo OpenLiteSpeed' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting up: Launching OpenLiteSpeed..."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '/usr/local/lsws/bin/lswsctrl start' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Verifica iniziale' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'sleep 5' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'if ! check_litespeed; then' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') ERROR: OpenLiteSpeed failed to start properly!"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    exit 1' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'fi' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '# Monitora OpenLiteSpeed' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'while true; do' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    if ! check_litespeed; then' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') WARNING: OpenLiteSpeed crashed, attempting restart..."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        /usr/local/lsws/bin/lswsctrl restart' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        sleep 5' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        if ! check_litespeed; then' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '            echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') CRITICAL: OpenLiteSpeed failed to restart!"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '            exit 1' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '        fi' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    fi' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '    sleep 10' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'done' >> /var/www/scripts/docker-entrypoint.sh
+    echo 'set -e' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> Hello from SIMPLIFIED entrypoint! <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> Current directory: $(pwd) <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> Script path: /var/www/scripts/docker-entrypoint.sh <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> Listing /var/www/scripts: <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
+    ls -la /var/www/scripts/ >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> Who am I: $(whoami) <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> SIMPLIFIED entrypoint finished successfully. <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'exit 0' >> /var/www/scripts/docker-entrypoint.sh
 
 # Ensure dos2unix is installed and convert the script
 RUN apt-get update && apt-get install -y dos2unix && apt-get clean && rm -rf /var/lib/apt/lists/*
