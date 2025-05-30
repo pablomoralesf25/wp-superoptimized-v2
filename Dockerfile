@@ -103,4 +103,4 @@ RUN chmod +x /var/www/scripts/docker-entrypoint.sh && \
 WORKDIR /var/www
 
 # Set entrypoint
-ENTRYPOINT ["/var/www/scripts/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/var/www/scripts/docker-entrypoint.sh"]
