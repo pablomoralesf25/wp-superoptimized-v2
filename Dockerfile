@@ -72,13 +72,28 @@ RUN mkdir -p /var/www/scripts/
 # Create a SUPER SIMPLE entrypoint script for debugging
 RUN echo '#!/bin/bash' > /var/www/scripts/docker-entrypoint.sh && \
     echo 'set -e' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> Hello from SIMPLIFIED entrypoint! <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> Current directory: $(pwd) <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> Script path: /var/www/scripts/docker-entrypoint.sh <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> Listing /var/www/scripts: <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
-    ls -la /var/www/scripts/ >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> Who am I: $(whoami) <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> SIMPLIFIED entrypoint finished successfully. <<<<"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Sleeping for 5 seconds to allow mounts to settle..."' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'sleep 5' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Initializing entrypoint script..."' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Running as user: $(whoami) (ID: $(id))"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Listing /:"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'ls -la /' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Listing /var:"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'ls -la /var' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Listing /var/www:"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'ls -la /var/www' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Listing /var/www/scripts:"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'ls -la /var/www/scripts' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Attempting to cat /var/www/scripts/docker-entrypoint.sh:"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo '[ -f "/var/www/scripts/docker-entrypoint.sh" ] && echo "DEBUG: File /var/www/scripts/docker-entrypoint.sh EXISTS. Content:" && cat /var/www/scripts/docker-entrypoint.sh || echo "DEBUG: CRITICAL - File /var/www/scripts/docker-entrypoint.sh DOES NOT EXIST at this point."' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: ---- End of initial diagnostics ----"' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> Hello from SIMPLIFIED entrypoint! <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> Current directory: $(pwd) <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> Script path: /var/www/scripts/docker-entrypoint.sh <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> Listing /var/www/scripts (again): <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'ls -la /var/www/scripts/' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> Who am I (again): $(whoami) <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
+    echo 'echo ">>>> SIMPLIFIED entrypoint finished successfully. <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
     echo 'exit 0' >> /var/www/scripts/docker-entrypoint.sh
 
 # Ensure dos2unix is installed and convert the script
