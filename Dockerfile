@@ -67,55 +67,49 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && mv wp-cli.phar /usr/local/bin/wp
 
 # Create scripts directory and start building entrypoint script
-RUN mkdir -p /var/www/scripts/
+RUN mkdir -p /usr/local/bin/
 
 # Create a SUPER SIMPLE entrypoint script for debugging
-RUN echo '#!/bin/bash' > /var/www/scripts/docker-entrypoint.sh && \
-    echo 'set -e' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "DEBUG: Sleeping for 5 seconds to allow mounts to settle..."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'sleep 5' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "DEBUG: Initializing entrypoint script..."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "DEBUG: Running as user: $(whoami) (ID: $(id))"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "DEBUG: Listing /:"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'ls -la /' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "DEBUG: Listing /var:"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'ls -la /var' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "DEBUG: Listing /var/www:"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'ls -la /var/www' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "DEBUG: Listing /var/www/scripts:"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'ls -la /var/www/scripts' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "DEBUG: Attempting to cat /var/www/scripts/docker-entrypoint.sh:"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo '[ -f "/var/www/scripts/docker-entrypoint.sh" ] && echo "DEBUG: File /var/www/scripts/docker-entrypoint.sh EXISTS. Content:" && cat /var/www/scripts/docker-entrypoint.sh || echo "DEBUG: CRITICAL - File /var/www/scripts/docker-entrypoint.sh DOES NOT EXIST at this point."' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo "DEBUG: ---- End of initial diagnostics ----"' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> Hello from SIMPLIFIED entrypoint! <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> Current directory: $(pwd) <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> Script path: /var/www/scripts/docker-entrypoint.sh <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> Listing /var/www/scripts (again): <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'ls -la /var/www/scripts/' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> Who am I (again): $(whoami) <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'echo ">>>> SIMPLIFIED entrypoint finished successfully. <<<<" >> /var/www/scripts/docker-entrypoint.sh' >> /var/www/scripts/docker-entrypoint.sh && \
-    echo 'exit 0' >> /var/www/scripts/docker-entrypoint.sh
+RUN echo '#!/bin/bash' > /usr/local/bin/docker-entrypoint.sh && \
+    echo 'set -e' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Sleeping for 5 seconds to allow mounts to settle..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'sleep 5' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Initializing entrypoint script..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Running as user: $(whoami) (ID: $(id))"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Listing /usr/local/bin:"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'ls -la /usr/local/bin' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: Attempting to cat /usr/local/bin/docker-entrypoint.sh:"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '[ -f "/usr/local/bin/docker-entrypoint.sh" ] && echo "DEBUG: File /usr/local/bin/docker-entrypoint.sh EXISTS. Content:" && cat /usr/local/bin/docker-entrypoint.sh || echo "DEBUG: CRITICAL - File /usr/local/bin/docker-entrypoint.sh DOES NOT EXIST at this point."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DEBUG: ---- End of initial diagnostics ----"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo ">>>> Hello from SIMPLIFIED entrypoint! <<<<" >> /usr/local/bin/docker-entrypoint.sh' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo ">>>> Current directory: $(pwd) <<<<" >> /usr/local/bin/docker-entrypoint.sh' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo ">>>> Script path: /usr/local/bin/docker-entrypoint.sh <<<<" >> /usr/local/bin/docker-entrypoint.sh' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo ">>>> Listing /usr/local/bin (again): <<<<" >> /usr/local/bin/docker-entrypoint.sh' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'ls -la /usr/local/bin/' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo ">>>> Who am I (again): $(whoami) <<<<" >> /usr/local/bin/docker-entrypoint.sh' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo ">>>> SIMPLIFIED entrypoint finished successfully. <<<<" >> /usr/local/bin/docker-entrypoint.sh' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'exit 0' >> /usr/local/bin/docker-entrypoint.sh
 
 # Ensure dos2unix is installed and convert the script
 RUN apt-get update && apt-get install -y dos2unix && apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN dos2unix /var/www/scripts/docker-entrypoint.sh
+RUN dos2unix /usr/local/bin/docker-entrypoint.sh
 
 # Make entrypoint executable and verify
-RUN chmod +x /var/www/scripts/docker-entrypoint.sh && \
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
     echo "=== SHELL VERIFICATION ===" && \
     ls -l /bin/bash && \
     echo "=== ENTRYPOINT VERIFICATION ===" && \
-    ls -la /var/www/scripts/docker-entrypoint.sh && \
+    ls -la /usr/local/bin/docker-entrypoint.sh && \
     echo "=== ENTRYPOINT CONTENT CHECK (FIRST 10 LINES) ===" && \
-    head -10 /var/www/scripts/docker-entrypoint.sh && \
+    head -10 /usr/local/bin/docker-entrypoint.sh && \
     echo "=== ENTRYPOINT SIZE CHECK (LINES) ===" && \
-    wc -l /var/www/scripts/docker-entrypoint.sh && \
+    wc -l /usr/local/bin/docker-entrypoint.sh && \
     echo "=== ENTRYPOINT SYNTAX CHECK ===" && \
-    bash -n /var/www/scripts/docker-entrypoint.sh && \
+    bash -n /usr/local/bin/docker-entrypoint.sh && \
     echo "=== ENTRYPOINT READY ==="
 
 # Set working directory
 WORKDIR /var/www
 
 # Set entrypoint
-ENTRYPOINT ["/bin/bash", "/var/www/scripts/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/usr/local/bin/docker-entrypoint.sh"]

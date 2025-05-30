@@ -46,7 +46,7 @@ services:
       - wordpress_data:/var/www/vhosts/localhost/html
       - ./config/vhosts:/usr/local/lsws/conf/vhosts/
       - ./config/php/php.ini:/tmp/host-php.ini:ro
-      - ./scripts:/var/www/scripts:ro
+      # - ./scripts:/var/www/scripts:ro
       - php_extensions:/usr/local/lsws/lsphp${PHP_VERSION}/lib/php
       - wordpress_logs:/var/log/wordpress
     # Commented out for Coolify - let Coolify handle the reverse proxy
