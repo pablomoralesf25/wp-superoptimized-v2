@@ -343,19 +343,26 @@ RUN echo '' >> /usr/local/bin/security-setup.sh && \
     echo '    done' >> /usr/local/bin/security-setup.sh && \
     echo '}' >> /usr/local/bin/security-setup.sh && \
     echo '' >> /usr/local/bin/security-setup.sh && \
-    echo '# FAST STARTUP - Skip heavy plugin installations for now' >> /usr/local/bin/security-setup.sh && \
-    echo 'echo "Installing LiteSpeed Cache plugin only..."' >> /usr/local/bin/security-setup.sh && \
-    echo 'setup_litespeed_cache' >> /usr/local/bin/security-setup.sh && \
+    echo '# MINIMAL SECURITY SETUP - Fast and reliable' >> /usr/local/bin/security-setup.sh && \
+    echo 'if [ "${SKIP_SECURITY_SETUP}" = "true" ]; then' >> /usr/local/bin/security-setup.sh && \
+    echo '    echo "Security setup skipped by environment variable"' >> /usr/local/bin/security-setup.sh && \
+    echo '    exit 0' >> /usr/local/bin/security-setup.sh && \
+    echo 'fi' >> /usr/local/bin/security-setup.sh && \
     echo '' >> /usr/local/bin/security-setup.sh && \
-    echo '# Skip heavy plugin downloads for faster startup' >> /usr/local/bin/security-setup.sh && \
-    echo '# setup_security_plugins  # Uncomment if needed' >> /usr/local/bin/security-setup.sh && \
-    echo '# setup_custom_plugins    # Uncomment if needed' >> /usr/local/bin/security-setup.sh && \
-    echo '# setup_custom_themes     # Uncomment if needed' >> /usr/local/bin/security-setup.sh && \
+    echo 'echo "Running minimal security setup..."' >> /usr/local/bin/security-setup.sh && \
     echo '' >> /usr/local/bin/security-setup.sh && \
-    echo '# Pulisci la cache dopo le installazioni' >> /usr/local/bin/security-setup.sh && \
-    echo 'wp cache flush --allow-root' >> /usr/local/bin/security-setup.sh && \
+    echo '# Try to install LiteSpeed Cache (with timeout)' >> /usr/local/bin/security-setup.sh && \
+    echo 'echo "Attempting to install LiteSpeed Cache plugin..."' >> /usr/local/bin/security-setup.sh && \
+    echo 'if timeout 60 wp plugin install litespeed-cache --activate --allow-root 2>/dev/null; then' >> /usr/local/bin/security-setup.sh && \
+    echo '    echo "LiteSpeed Cache installed successfully"' >> /usr/local/bin/security-setup.sh && \
+    echo 'else' >> /usr/local/bin/security-setup.sh && \
+    echo '    echo "LiteSpeed Cache installation failed - continuing without it"' >> /usr/local/bin/security-setup.sh && \
+    echo 'fi' >> /usr/local/bin/security-setup.sh && \
     echo '' >> /usr/local/bin/security-setup.sh && \
-    echo 'echo "Security setup completed successfully!"' >> /usr/local/bin/security-setup.sh
+    echo '# Clean cache' >> /usr/local/bin/security-setup.sh && \
+    echo 'wp cache flush --allow-root 2>/dev/null || true' >> /usr/local/bin/security-setup.sh && \
+    echo '' >> /usr/local/bin/security-setup.sh && \
+    echo 'echo "Minimal security setup completed successfully!"' >> /usr/local/bin/security-setup.sh
 
 # --- Placeholder for docker-entrypoint.sh creation ---
 # --- We will add this in the next step --- 
@@ -435,9 +442,13 @@ RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '# MAXIMUM PERFORMANCE OPTIMIZATIONS' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Applying maximum performance optimizations..."' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '# Update CA certificates for wp_remote_get() fix' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Updating CA certificates for wp_remote_get() SSL fix..."' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'update-ca-certificates --fresh' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Update CA certificates for wp_remote_get() fix (skip if Coolify manages certificates)' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'if [ "${SKIP_CA_CERTIFICATES_UPDATE}" != "true" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Updating CA certificates for wp_remote_get() SSL fix..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    update-ca-certificates --fresh' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'else' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Skipping CA certificate update (managed by Coolify)"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '# Set up RAM disk for cache if not exists' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'if [ ! -d "/dev/shm/lscache" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
@@ -567,7 +578,7 @@ RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '# Eseguiamo il setup di sicurezza una sola volta (con timeout)' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'if [ ! -f "/var/www/security-setup.done" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Starting up: Running security setup..."' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '    if timeout 120 bash /usr/local/bin/security-setup.sh; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    if timeout 90 bash /usr/local/bin/security-setup.sh; then' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '        touch /var/www/security-setup.done' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '        echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') Security setup completed successfully."' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    else' >> /usr/local/bin/docker-entrypoint.sh && \
@@ -586,7 +597,12 @@ RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo 'if ! check_litespeed; then' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') ERROR: OpenLiteSpeed failed to start properly!"' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '    exit 1' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh
+    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '# Success message' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') 🚀 WordPress is ready!"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') 🎯 Maximum performance optimizations active"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "$(date '\''+%Y-%m-%d %H:%M:%S'\'') 🔧 Coolify wp_remote_get() fixes applied"' >> /usr/local/bin/docker-entrypoint.sh
 
 RUN echo '' >> /usr/local/bin/docker-entrypoint.sh && \
     echo '# Monitora OpenLiteSpeed' >> /usr/local/bin/docker-entrypoint.sh && \
